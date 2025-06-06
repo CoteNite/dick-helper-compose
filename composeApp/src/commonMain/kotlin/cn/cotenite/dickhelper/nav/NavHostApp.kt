@@ -1,23 +1,19 @@
 package cn.cotenite.dickhelper.nav
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.WbSunny
-import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.WbSunny
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -28,11 +24,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import cn.cotenite.dickhelper.ui.screens.TodayScreen
+import cn.cotenite.dickhelper.ui.screens.TimingScreen
 import cn.cotenite.dickhelper.ui.screens.HistoryScreen
-import cn.cotenite.dickhelper.ui.screens.MainScreen
-import cn.cotenite.dickhelper.ui.screens.SettingScreen
-import cn.cotenite.dickhelper.viewModle.MainAction
-import cn.cotenite.dickhelper.viewModle.MainViewModel
 
 @Composable
 fun NavHostApp(topBar: @Composable () -> Unit){
@@ -42,16 +36,74 @@ fun NavHostApp(topBar: @Composable () -> Unit){
     Scaffold(
         topBar={topBar()},
         bottomBar = { BottomBar(navController) }
-    ){
+    ){  paddingValues ->
         NavHost(navController=navController, startDestination =Destination.Today.route ){
-            composable(Destination.Today.route){
-                MainScreen()
+
+            val slideIn = slideInHorizontally(animationSpec = tween(500)) { fullWidth -> fullWidth }
+            val slideOut = slideOutHorizontally(animationSpec = tween(500)) { fullWidth -> -fullWidth }
+            val slideInBack = slideInHorizontally(animationSpec = tween(500)) { fullWidth -> -fullWidth }
+            val slideOutBack = slideOutHorizontally(animationSpec = tween(500)) { fullWidth -> fullWidth }
+
+
+            composable(
+                Destination.Today.route,
+                enterTransition = {
+                    when (initialState.destination.route) {
+                        Destination.History.route -> slideInBack // 从历史页面回来
+                        Destination.Setting.route -> slideInBack // 从设置页面回来
+                        else -> fadeIn() // 默认淡入
+                    }
+                },
+                exitTransition = {
+                    when (targetState.destination.route) {
+                        Destination.History.route -> slideOut // 去往历史页面
+                        Destination.Setting.route -> slideOut // 去往设置页面
+                        else -> fadeOut() // 默认淡出
+                    }
+                }
+            ){
+                TimingScreen()
             }
-            composable(Destination.History.route){
-                HistoryScreen()
+
+
+            composable(
+                Destination.History.route,
+                enterTransition = {
+                    when (initialState.destination.route) {
+                        Destination.Today.route -> slideIn
+                        Destination.Setting.route -> slideInBack
+                        else -> fadeIn()
+                    }
+                },
+                exitTransition = {
+                    when (targetState.destination.route) {
+                        Destination.Today.route -> slideOutBack
+                        Destination.Setting.route -> slideOut
+                        else -> fadeOut()
+                    }
+                }
+            ){
+                TodayScreen(paddingValues = paddingValues)
             }
-            composable(Destination.Setting.route){
-                SettingScreen()
+
+            composable(
+                Destination.Setting.route,
+                enterTransition = {
+                    when (initialState.destination.route) {
+                        Destination.Today.route -> slideIn
+                        Destination.History.route -> slideIn
+                        else -> fadeIn()
+                    }
+                },
+                exitTransition = {
+                    when (targetState.destination.route) {
+                        Destination.Today.route -> slideOutBack
+                        Destination.History.route -> slideOutBack
+                        else -> fadeOut()
+                    }
+                }
+            ){
+                HistoryScreen(paddingValues = paddingValues)
             }
         }
     }
@@ -89,7 +141,7 @@ fun BottomBar(navController: NavController){
 
 
 sealed class Destination(val route:String,val icon:ImageVector){
-    data object Today:Destination("today",Icons.Rounded.WbSunny)
-    data object History:Destination("history",Icons.Rounded.History)
-    data object Setting:Destination("setting",Icons.Rounded.Settings)
+    data object Today:Destination("timing",Icons.Rounded.Timer)
+    data object History:Destination("today",Icons.Rounded.WbSunny)
+    data object Setting:Destination("history",Icons.Rounded.History)
 }

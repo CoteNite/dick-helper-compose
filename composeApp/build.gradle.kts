@@ -43,6 +43,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.navigation.compose)
             implementation(compose.materialIconsExtended)
+            implementation(libs.kotlinx.datetime)
 
             //kotlinx
             implementation(libs.kotlinx.datetime)
@@ -103,8 +104,8 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+
     add("kspAndroid", libs.androidx.room.compiler)
-    add("kspCommonMainMetadata", libs.androidx.room.compiler)
     add("kspDesktop",libs.androidx.room.compiler)
 }
 
